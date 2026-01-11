@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    container_name: service_logs
+    ports:
+      - "8091:80"
+    environment:
+      - APP_URL=http://localhost:8091
+      - PHP_TZ=Asia/Kolkata
+      - SQLITE_PATH=/var/www/html/data/app.db
+    volumes:
+      - ./:/var/www/html
+      - ./data:/var/www/html/data
+    restart: unless-stopped
