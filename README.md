@@ -1,62 +1,163 @@
-# Service Log App (PHP + SQLite) — Docker Ready
+# Service Logs - Field Service Management System
 
-## Features
-- Login
-- Categories: Mechanical / Electrical / Application
-- Each category has its own service number series:
-  - MECH-000001, ELEC-000001, APP-000001 ...
-- Entry form includes:
-  - Service no (auto), Name, Date from/to, Time from/to,
-    Company name/place/contact, Issue, Solution, Expenses, Cost
-- Browse per category, search, view + print anytime
-- ✅ Edit/Update existing service entry
-- ✅ Export to PDF (simple built-in PDF generator)
-- ✅ User Management (add users)
-- ✅ Change password
-- ✅ Company name autocomplete (from previous entries)
+**Service Logs** is a lightweight, web-based application designed for technicians and engineers to track field service reports. It categorizes services (Mechanical, Electrical, Application), generates PDF reports, and manages service history with a clean, searchable interface.
 
-## Run on VPS
+Built with **PHP** and **SQLite**, it is Docker-ready and easy to deploy on any server or local machine.
+
+## 🌟 Features
+
+* **Categorized Logs:** Separate auto-incrementing series for distinct departments:
+* **MECH** (Mechanical) e.g., `MECH-000001`
+* **ELEC** (Electrical) e.g., `ELEC-000001`
+* **APP** (Application) e.g., `APP-000001`
+
+
+* **Detailed Reporting:** Record dates, times, company details, contact persons, issues found, solutions provided, and expense tracking.
+* **Smart Tools:** Company name autocomplete (learns from history) and image attachments.
+* **PDF Export:** Generate professional service report PDFs instantly.
+* **User Management:** Admin panel to add users and reset passwords.
+* **Search & Filter:** Easily find past service records by specific criteria.
+
+---
+
+## 📋 Prerequisites
+
+* **Docker** and **Docker Compose** installed on your system.
+* (Optional) A reverse proxy (like Nginx) if deploying to a public server.
+
+---
+
+## 🚀 Quick Start (Docker)
+
+### 1. Project Setup
+
+Ensure your project directory is structured as follows:
+
+```text
+/service-logs-app
+  ├── app/
+  ├── api/
+  ├── assets/
+  ├── data/           <-- Will hold the database
+  ├── sql/
+  ├── uploads/        <-- Will hold images
+  ├── docker-compose.yml
+  ├── Dockerfile
+  ├── index.php
+  ├── install.php
+  └── ... (other files)
+
+```
+
+### 2. Build and Run
+
+Open your terminal in the project root and run:
+
 ```bash
-unzip service-log-app-v2.zip
-cd service-log-app
 docker compose up -d --build
+
 ```
 
-Open:
-- http://YOUR_SERVER_IP:8091
+### 3. Permissions Setup (Critical)
 
-## Install DB (one time)
-Open once:
-- http://YOUR_SERVER_IP:8091/install.php
+The application needs to write to the `data` and `uploads` folders. Run the following commands to set the correct ownership for the web server user (`www-data`):
 
-Default user:
-- admin / admin123
-
-Then delete install.php:
 ```bash
-rm install.php
+# Create folders if they don't exist
+mkdir -p data uploads
+
+# Set permissions inside the container
+docker exec -it service_logs chown -R www-data:www-data /var/www/html/data
+docker exec -it service_logs chown -R www-data:www-data /var/www/html/uploads
+docker exec -it service_logs chmod -R 775 /var/www/html/data
+docker exec -it service_logs chmod -R 775 /var/www/html/uploads
+
 ```
 
-## SQLite file
-Stored on host:
-- ./data/app.db
+### 4. Database Installation
 
-If you get: unable to open database file
+1. Open your web browser and go to: `http://localhost:8091/install.php`.
+2. You should see a **"✅ Installed"** confirmation screen.
+3. **Default Credentials:**
+* **Username:** `admin`
+* **Password:** `admin123`
+
+
+
+### 5. Cleanup
+
+For security, delete the installation file after setup:
+
 ```bash
-mkdir -p data
-sudo chown -R 33:33 data
-sudo chmod -R 775 data
-docker compose restart
+docker exec -it service_logs rm /var/www/html/install.php
+
 ```
 
-sudo mkdir -p /var/www/html/uploads
+---
 
-# Give ownership to the web server user
-sudo chown -R www-data:www-data /var/www/html/uploads
-sudo chown -R www-data:www-data /var/www/html/data
+## ⚙️ Configuration
 
-# Set write permissions (775 allows owner and group to write)
-sudo chmod -R 775 /var/www/html/uploads
-sudo chmod -R 775 /var/www/html/data
+Configuration is handled via environment variables in `docker-compose.yml`.
 
-docker exec -it YOUR_CONTAINER_NAME chown -R www-data:www-data /var/www/html/
+| Variable | Default | Description |
+| --- | --- | --- |
+| `APP_URL` | `http://localhost:8091` | The base URL for the app. Update this if using a domain name. |
+| `PHP_TZ` | `Asia/Kolkata` | Timezone for report timestamps. Change to your local zone (e.g., `America/New_York`). |
+| `SQLITE_PATH` | `/var/www/html/data/app.db` | Internal path to the SQLite database file. |
+
+To apply changes, edit the file and restart:
+
+```bash
+docker compose down && docker compose up -d
+
+```
+
+---
+
+## 📖 Usage Guide
+
+### Creating a New Service Entry
+
+1. Click **"New Entry"** on the dashboard.
+2. Select the **Category** (Mechanical, Electrical, or Application).
+3. Fill in the client details. *Note: As you type the Company Name, suggestions from previous visits will appear.*
+4. Upload any relevant site photos.
+5. Click **Save**. The Service Number (e.g., `MECH-000045`) is generated automatically.
+
+### Exporting Reports
+
+1. Navigate to the **View** or **Search** page.
+2. Click the **PDF** icon next to any service entry.
+3. A printable PDF summary will be downloaded.
+
+### User Management
+
+1. Log in as `admin`.
+2. Go to the **Users** tab.
+3. Here you can register new technicians or reset passwords for existing accounts.
+
+---
+
+## 🛠 Troubleshooting
+
+**Error: "General error: 14 unable to open database file"**
+
+* This indicates the web server cannot write to the `data/` directory.
+* **Solution:** Re-run the permission commands listed in Step 3 of the Quick Start.
+
+**Images not uploading**
+
+* Ensure the `uploads/` folder exists and has write permissions.
+* Check that the file size is within limits (default PHP limit is usually 2MB, but can be adjusted in a custom `php.ini`).
+
+**Autocomplete not working**
+
+* The autocomplete relies on existing data. It will start working once you have saved a few service records with company names.
+
+---
+
+## 🔒 Security Recommendations
+
+* **Change Default Password:** Immediately after logging in, go to the User settings and change the `admin` password.
+* **Delete Install Script:** Ensure `install.php` is removed to prevent the database from being reset accidentally.
+* **Backups:** Regularly back up the `./data/app.db` file and the `./uploads/` directory to save your records.
