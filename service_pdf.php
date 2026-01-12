@@ -15,50 +15,65 @@ if (!$r) { header('Location:/'); exit; }
 $pdf = new SimplePDF();
 
 // --- HEADER ---
-$pdf->addCenter("SERVICE REPORT", 20, true);
-$pdf->addSpace(10);
-$pdf->addCenter($r['service_no'], 30, true); // Big Service Number
+$pdf->addCenter("SERVICE INVOICE", 18, true);
 $pdf->addSpace(5);
-$pdf->addCenter("Category: " . cat_label($r['category']), 12, false);
-$pdf->addSpace(15);
+$pdf->addCenter("Sinar Sheetmetal Solutions Pvt Ltd", 12, true);
 $pdf->addLine();
 
-// --- PROVIDER INFO ---
-$pdf->addText("SERVICE PROVIDER", 10, false);
-$pdf->addText($r['provider_name'], 14, true);
-$pdf->addText("Logged on: " . $r['created_at'], 10, false);
-$pdf->addSpace(15);
+// --- META INFO ---
+$pdf->addText("Invoice No: " . $r['service_no'], 12, true);
+$pdf->addText("Date:       " . date('d-M-Y', strtotime($r['created_at'])), 10, false);
+$pdf->addText("Category:   " . cat_label($r['category']), 10, false);
+$pdf->addSpace(10);
 
 // --- CLIENT INFO ---
-$pdf->addText("CLIENT / COMPANY", 10, false);
-$pdf->addText($r['company_name'], 14, true);
-$pdf->addText("Location: " . $r['company_place'], 12, false);
+$pdf->addText("BILLED TO:", 10, true);
+$pdf->addText($r['company_name'], 12, false);
+$pdf->addText("Location: " . $r['company_place'], 10, false);
 if (!empty($r['contact_person'])) {
-    $pdf->addText("Contact Person: " . $r['contact_person'], 12, false);
+    $pdf->addText("Contact:  " . $r['contact_person'], 10, false);
 }
-$pdf->addText("Contact Details: " . $r['company_contact'], 12, false);
+$pdf->addText("Phone:    " . $r['company_contact'], 10, false);
 $pdf->addSpace(15);
+
+// --- MACHINE INFO ---
+$pdf->addText("MACHINE DETAILS:", 10, true);
+$pdf->addText("Machine No: " . ($r['machine_number'] ?: 'N/A'), 11, false);
+$pdf->addText("Status:     " . ($r['machine_status'] ?? 'Out of Warranty'), 11, false);
+$pdf->addSpace(5);
+
+if(!empty($r['spares_used'])) {
+    $pdf->addText("Spares Used:", 10, true);
+    $pdf->addText("  " . $r['spares_used'], 10, false);
+} else {
+    $pdf->addText("Spares Used: None", 10, false);
+}
+$pdf->addSpace(15);
+
+// --- ISSUE & SOLUTION ---
+$pdf->addText("ISSUE FOUND:", 10, true);
+// Basic word wrap simulation for the PDF class
+foreach (preg_split("/\r?\n/", wordwrap($r['issue_found'], 75)) as $ln) {
+    $pdf->addText("  " . $ln, 10, false);
+}
+$pdf->addSpace(10);
+
+$pdf->addText("SOLUTION / ACTION TAKEN:", 10, true);
+foreach (preg_split("/\r?\n/", wordwrap($r['solution'], 75)) as $ln) {
+    $pdf->addText("  " . $ln, 10, false);
+}
+$pdf->addSpace(15);
+
 $pdf->addLine();
 
-// --- JOB DETAILS ---
-$pdf->addText("JOB DETAILS", 10, false);
-$pdf->addText($r['name'], 12, true);
-$pdf->addSpace(5);
-$pdf->addText("Duration: " . $r['date_from'] . " (" . $r['time_from'] . ")  TO  " . $r['date_to'] . " (" . $r['time_to'] . ")", 11, false);
+// --- FOOTER / COSTS ---
+$pdf->addText("Service/Expenses: " . number_format((float)$r['expenses'], 2), 11, false);
+$pdf->addText("TOTAL AMOUNT:     " . number_format((float)$r['cost'], 2), 14, true);
 
-$pdf->addSpace(5);
-$pdf->addText("Expenses: " . number_format((float)$r['expenses'], 2) . "   Total Cost: " . number_format((float)$r['cost'], 2), 12, true);
-$pdf->addSpace(15);
-
-// --- FINDINGS ---
-$pdf->addText("ISSUE FOUND / NATURE", 10, false);
-$pdf->addText("Nature: " . $r['issue_nature'] . "  |  Fixed: " . $r['issue_fixed'], 12, true);
-foreach (preg_split("/\r?\n/", (string)$r['issue_found']) as $ln) $pdf->addText("  " . $ln, 11, false);
-$pdf->addSpace(15);
-
-// --- SOLUTION ---
-$pdf->addText("SOLUTION / ACTION TAKEN", 10, false);
-foreach (preg_split("/\r?\n/", (string)$r['solution']) as $ln) $pdf->addText("  " . $ln, 11, false);
+$pdf->addSpace(30);
+$pdf->addText("__________________________                __________________________", 10, false);
+$pdf->addText("Customer Signature                        Authorized Signatory", 10, false);
 
 // Output
 $pdf->output($r['service_no'] . '.pdf');
+?>
