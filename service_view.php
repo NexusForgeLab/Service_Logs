@@ -152,14 +152,14 @@ render_header("Service " . $r['service_no'], $user);
 <div class="invoice-box">
     <div class="invoice-header">
         <div>
-            <img src="/assets/Sinar_logo_transparent_bg.jpg" class="invoice-logo" alt="SINAR LOGO" style="max-height:80px;">
+            <img src="/assets/Sinar_logo_transparent_bg.png" class="invoice-logo" alt="SINAR LOGO" style="max-height:80px;">
         </div>
         <div class="header-right">
             <b style="font-size:14px;">SINAR SHEETMETAL SOLUTIONS PVT LTD</b><br>
-            Plot No. 123, Industrial Area<br>
-            Bangalore, Karnataka - 560099<br>
-            Contact: +91 99999 88888<br>
-            Email: support@sinar.com
+            Plot No.31,2nd Phase, Opp Paragon outlet, Peenya Industrial Area<br>
+            Bangalore, Karnataka - 560058<br>
+            Contact: +91 98801 89838<br>
+            Email: service@sinarsolution.com
         </div>
     </div>
 
