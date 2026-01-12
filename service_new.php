@@ -49,7 +49,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         $pdo->prepare("UPDATE category_counters SET last_number=? WHERE category=?")->execute([$next, $cat]);
         $service_no = $cat . "-" . str_pad((string)$next, 6, "0", STR_PAD_LEFT);
 
-        // Insert Service (With explicit created_at)
+        // Insert Service
         $sql = "INSERT INTO services(category, service_no, provider_id, provider_name, name, date_from, date_to, time_from, time_to, company_name, company_place, company_contact, contact_person, machine_number, issue_nature, issue_fixed, issue_found, solution, expenses, cost, created_at)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         $params = [$cat, $service_no, $user['id'], $provider_name, $name, $date_from, $date_to, $time_from, $time_to, $company_name, $company_place, $company_contact, $contact_person, $machine_number, $issue_nature, $issue_fixed, $issue_found, $solution, $expenses, $cost, $now];
@@ -57,14 +57,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         $pdo->prepare($sql)->execute($params);
         $service_id = (int)$pdo->lastInsertId();
 
-        // Images (With explicit created_at)
+        // Images (Loop through re-indexed file array)
         if (!empty($_FILES['images']['name'][0])) {
             $uploadDir = __DIR__ . '/uploads/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            foreach ($_FILES['images']['name'] as $key => $filename) {
-                if ($_FILES['images']['error'][$key] === UPLOAD_ERR_OK) {
-                    $tmpName = $_FILES['images']['tmp_name'][$key];
+            
+            $count = count($_FILES['images']['name']);
+            for($i=0; $i<$count; $i++) {
+                if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
+                    $filename = $_FILES['images']['name'][$i];
+                    $tmpName  = $_FILES['images']['tmp_name'][$i];
                     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    
                     if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                         $newFilename = $service_id . '_' . uniqid() . '.' . $ext;
                         if (move_uploaded_file($tmpName, $uploadDir . $newFilename)) {
@@ -91,7 +95,7 @@ render_header("New ".cat_label($cat)." Service",$user);
 <div class="card">
   <h1><?php echo h(cat_label($cat)); ?> Service Entry</h1>
   <div class="muted">Service Number will be generated automatically upon saving.</div>
-  <?php if($err): ?><div class="card" style="border-color:var(--pop-red); color:var(--pop-red);"><?php echo h($err); ?></div><?php endif; ?>
+  <?php if($err): ?><div class="card" style="border-color:var(--pop-red); color:var(--pop-red); user-select:text;"><?php echo h($err); ?></div><?php endif; ?>
 
   <form method="post" class="grid" enctype="multipart/form-data">
     <input type="hidden" name="csrf" value="<?php echo h(csrf_token()); ?>"/>
@@ -135,7 +139,19 @@ render_header("New ".cat_label($cat)." Service",$user);
     <div class="col-12"><div class="muted">Issue Found *</div><textarea name="issue_found" required></textarea></div>
     <div class="col-12"><div class="muted">Solution / Action Taken *</div><textarea name="solution" required></textarea></div>
     
-<div class="col-12"><div class="muted">Upload Images (Max 100MB each, up to 20 images)</div><input type="file" name="images[]" multiple accept="image/*" style="padding:10px; background:#f9f9f9;"/></div>
+    <div class="col-12">
+        <div class="muted">Upload Images (Max 20 images)</div>
+        <div style="background:#f9f9f9; padding:10px; border:1px dashed #ccc; border-radius:6px;">
+            <input type="file" id="imgInput" name="images[]" multiple accept="image/*" style="display:none;" onchange="handleFiles(this.files)">
+            
+            <button type="button" class="btn" onclick="document.getElementById('imgInput').click()" style="margin-bottom:10px;">
+                + Select Images
+            </button>
+
+            <div id="previewArea" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+            <div id="fileCount" class="muted" style="margin-top:5px;"></div>
+        </div>
+    </div>
 
     <div class="col-12 no-print" style="margin-top:20px;">
       <button class="btn" type="submit" style="background:var(--pop-cyan); color:white;">Save Service Entry</button>
@@ -147,6 +163,7 @@ render_header("New ".cat_label($cat)." Service",$user);
 <script>
 attachCompanySuggest('companyInput');
 
+// --- MACHINES LOGIC ---
 async function fetchMachines() {
     const comp = document.getElementById('companyInput').value;
     const hint = document.getElementById('machineHint');
@@ -193,6 +210,70 @@ async function reqAddMachine() {
         await fetch('/api/machines.php', { method:'POST', body:fd });
         alert("Request sent to Admin.");
     }
+}
+
+// --- IMAGE MANAGER JS ---
+let dt = new DataTransfer();
+
+function handleFiles(files) {
+    for (let i = 0; i < files.length; i++) {
+        dt.items.add(files[i]);
+    }
+    updateInputAndPreview();
+}
+
+function updateInputAndPreview() {
+    // Sync DataTransfer to Input
+    document.getElementById('imgInput').files = dt.files;
+    
+    // Render Previews
+    const area = document.getElementById('previewArea');
+    area.innerHTML = '';
+    
+    const files = dt.files;
+    document.getElementById('fileCount').innerText = files.length === 0 ? '' : files.length + " file(s) selected.";
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const wrap = document.createElement('div');
+        Object.assign(wrap.style, { position: 'relative', border: '1px solid #ddd', background:'#fff', padding:'2px', borderRadius:'4px' });
+
+        // Thumbnail
+        const img = document.createElement('img');
+        img.file = file;
+        img.style.height = '60px';
+        img.style.width = 'auto';
+        img.style.display = 'block';
+        
+        const reader = new FileReader();
+        reader.onload = (e) => img.src = e.target.result;
+        reader.readAsDataURL(file);
+
+        // Remove Button
+        const btn = document.createElement('button');
+        btn.innerText = '×';
+        Object.assign(btn.style, {
+            position: 'absolute', top: '-6px', right: '-6px',
+            width: '20px', height: '20px', lineHeight: '18px',
+            background: '#ff5252', color: 'white', border: 'none',
+            borderRadius: '50%', cursor: 'pointer', fontWeight: 'bold'
+        });
+        btn.type = 'button';
+        btn.onclick = () => removeFile(i);
+
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        area.appendChild(wrap);
+    }
+}
+
+function removeFile(index) {
+    const newDt = new DataTransfer();
+    for (let i = 0; i < dt.files.length; i++) {
+        if (i !== index) newDt.items.add(dt.files[i]);
+    }
+    dt = newDt;
+    updateInputAndPreview();
 }
 </script>
 <?php render_footer(); ?>
