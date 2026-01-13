@@ -105,7 +105,7 @@ render_header("Edit " . $r['service_no'], $user);
     <div class="col-4"><div class="muted">Service No</div><input value="<?php echo h($r['service_no']); ?>" readonly /></div>
     <div class="col-4"><div class="muted">Service Provider</div><input name="provider_name" value="<?php echo h($r['provider_name']); ?>" required /></div>
 
-    <div class="col-12"><div class="muted">Name / Title *</div><input name="name" value="<?php echo h($r['name']); ?>" required /></div>
+    <div class="col-12"><div class="muted">Subject *</div><input name="name" value="<?php echo h($r['name']); ?>" required /></div>
 
     <div class="col-3"><div class="muted">Date From *</div><input type="date" name="date_from" value="<?php echo h($r['date_from']); ?>" required /></div>
     <div class="col-3"><div class="muted">Date To *</div><input type="date" name="date_to" value="<?php echo h($r['date_to']); ?>" required /></div>

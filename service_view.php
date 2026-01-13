@@ -50,7 +50,7 @@ render_header("Service " . $r['service_no'], $user);
 <div class="grid no-print">
     <div class="col-12">
       <div class="card">
-          <div class="muted">Title</div>
+          <div class="muted">Subject</div>
           <div style="font-size:1.2em; font-weight:bold;"><?php echo h($r['name']); ?></div>
       </div>
     </div>
@@ -163,11 +163,11 @@ render_header("Service " . $r['service_no'], $user);
         </div>
     </div>
 
-    <div class="invoice-title">Service Report / Bill</div>
+    <div class="invoice-title">Service Report</div>
 
     <div class="info-grid">
         <div class="info-col">
-            <div class="info-label">Billed To (Client):</div>
+            <div class="info-label">Customer Details:</div>
             <div class="info-val"><?php echo h($r['company_name']); ?></div>
             <div><?php echo h($r['company_place']); ?></div>
             <div><?php echo h($r['company_contact']); ?></div>

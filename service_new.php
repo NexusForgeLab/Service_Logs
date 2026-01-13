@@ -113,7 +113,7 @@ render_header("New ".cat_label($cat)." Service",$user);
     <div class="col-4"><div class="muted">Service No</div><input value="(Auto-Generated)" readonly style="color:#888; font-style:italic;"/></div>
     <div class="col-4"><div class="muted">Service Provider</div><input name="provider_name" value="<?php echo h($user['display_name']); ?>" required/></div>
 
-    <div class="col-12"><div class="muted">Name / Title *</div><input name="name" required placeholder="Brief title of the work"/></div>
+    <div class="col-12"><div class="muted">Subject *</div><input name="name" required placeholder="Brief title of the work"/></div>
 
     <div class="col-3"><div class="muted">Date From *</div><input type="date" name="date_from" value="<?php echo h(date('Y-m-d')); ?>" required/></div>
     <div class="col-3"><div class="muted">Date To *</div><input type="date" name="date_to" value="<?php echo h(date('Y-m-d')); ?>" required/></div>

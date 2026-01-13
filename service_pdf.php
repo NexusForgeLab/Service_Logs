@@ -27,7 +27,7 @@ $pdf->addText("Category:   " . cat_label($r['category']), 10, false);
 $pdf->addSpace(10);
 
 // --- CLIENT INFO ---
-$pdf->addText("BILLED TO:", 10, true);
+$pdf->addText("CUSTOMER DETAILS:", 10, true);
 $pdf->addText($r['company_name'], 12, false);
 $pdf->addText("Location: " . $r['company_place'], 10, false);
 if (!empty($r['contact_person'])) {
