@@ -4,8 +4,6 @@
 
 Built with **PHP** and **SQLite**, it is Docker-ready and easy to deploy on any server or local machine.
 
-![Service Logs Logo](assets/icon-512.png)
-
 ## 🌟 Features
 
 * **Categorized Logs:** Separate auto-incrementing series for distinct departments:
